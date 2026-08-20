@@ -1,0 +1,23 @@
+{
+  "trade": {
+    "2025-04": { "exports_usd_bn": 38.49, "imports_usd_bn": 65.4, "deficit_usd_bn": 26.91 },
+    "2025-05": { "exports_usd_bn": 38.3, "imports_usd_bn": 60.87, "deficit_usd_bn": 22.57 },
+    "2025-06": { "exports_usd_bn": 34.98, "imports_usd_bn": 54.08, "deficit_usd_bn": 19.1 },
+    "2025-07": { "exports_usd_bn": 37.24, "imports_usd_bn": 64.59, "deficit_usd_bn": 27.35 },
+    "2026-04": { "exports_usd_bn": 43.56, "imports_usd_bn": 71.94, "deficit_usd_bn": 28.38 },
+    "2026-05": { "exports_usd_bn": 45.2, "imports_usd_bn": 73.41, "deficit_usd_bn": 28.21 },
+    "2026-06": { "exports_usd_bn": 40.4, "imports_usd_bn": 70.84, "deficit_usd_bn": 30.44 },
+    "2026-07": { "exports_usd_bn": 44.24, "imports_usd_bn": 76.22, "deficit_usd_bn": 31.98 }
+  },
+  "iip": {
+    "2025-06": { "overall_growth_pct": 1.5, "manufacturing_growth_pct": 3.6 },
+    "2026-03": { "overall_growth_pct": 4.1, "manufacturing_growth_pct": 4.3 },
+    "2026-04": { "overall_growth_pct": 4.9, "manufacturing_growth_pct": 6.2 },
+    "2026-05": { "overall_growth_pct": 5.1, "manufacturing_growth_pct": 5.5 },
+    "2026-06": { "overall_growth_pct": 7.3, "manufacturing_growth_pct": 7.8 }
+  },
+  "msme": {
+    "2025-03": { "total_registered": 61900000 },
+    "2026-02": { "total_registered": 78300000 }
+  }
+}

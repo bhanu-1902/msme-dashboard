@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Ledger — India MSME &amp; Trade Intelligence</title>
+<meta name="description" content="Live YoY and MoM tracking of India's MSME registrations, merchandise trade, and industrial production from official government sources.">
+<style>
+  :root {
+    --bg:#09090b; --panel:#18181b; --panel-alt:#1f1f23; --border:#27272a;
+    --text:#f5f5f4; --dim:#a1a1aa; --dimmer:#71717a; --dimmest:#52525b;
+    --amber:#d97706; --amber-l:#f59e0b; --amber-ll:#fbbf24;
+    --teal:#14b8a6; --teal-l:#2dd4bf;
+    --red:#ef4444; --red-l:#f87171;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+  .wrap{max-width:56rem;margin:0 auto;padding:1.5rem 1rem 4rem}
+  @media(min-width:640px){.wrap{padding:2rem 1.5rem 4rem}}
+
+  .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--amber-l);margin:0 0 6px}
+  h1{font-size:2rem;font-weight:700;letter-spacing:-.02em;margin:0}
+  @media(min-width:640px){h1{font-size:2.5rem}}
+  .sub{color:var(--dim);font-size:.9rem;margin:8px 0 0;line-height:1.55}
+
+  .status-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:14px}
+  .chip{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;
+        border:1px solid var(--border);border-radius:999px;padding:5px 11px;color:var(--dimmer)}
+  .chip .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+  .dot.live{background:var(--teal);animation:pulse 2.5s ease-in-out infinite}
+  .dot.stale{background:var(--amber-l)}
+  .dot.err{background:var(--red)}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+  .refresh-btn{font-family:var(--mono);font-size:10px;background:var(--panel);border:1px solid var(--border);
+               color:var(--dim);border-radius:999px;padding:5px 12px;cursor:pointer;transition:border-color .15s,color .15s}
+  .refresh-btn:hover{border-color:var(--amber);color:var(--text)}
+  .refresh-btn:disabled{opacity:.5;cursor:not-allowed}
+
+  .banner{margin:1rem 0;font-size:.78rem;border-radius:8px;padding:11px 14px;line-height:1.55;display:none}
+  .banner.warn{color:var(--amber-ll);background:rgba(120,53,15,.22);border:1px solid #78350f}
+  .banner.err{color:var(--red-l);background:rgba(127,29,29,.22);border:1px solid #7f1d1d}
+
+  section{margin-top:2.25rem}
+  .sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:4px}
+  h2{font-size:1.05rem;font-weight:700;margin:0}
+  .sec-meta{font-family:var(--mono);font-size:10px;color:var(--dimmest)}
+  .sec-desc{font-size:.8rem;color:var(--dim);margin:0 0 14px;line-height:1.55}
+
+  .metric-grid{display:grid;grid-template-columns:1fr;gap:10px}
+  @media(min-width:560px){.metric-grid{grid-template-columns:repeat(3,1fr)}}
+  .metric-grid.two{grid-template-columns:1fr}
+  @media(min-width:560px){.metric-grid.two{grid-template-columns:repeat(2,1fr)}}
+
+  .metric{background:var(--panel);border:1px solid var(--border);border-radius:11px;padding:16px}
+  .metric-label{font-size:.72rem;color:var(--dimmer);margin-bottom:8px;line-height:1.35}
+  .metric-value{font-family:var(--mono);font-size:1.7rem;font-weight:700;line-height:1.1}
+  .deltas{display:flex;gap:7px;margin-top:11px;flex-wrap:wrap}
+  .delta{display:inline-flex;align-items:center;gap:4px;font-family:var(--mono);font-size:10.5px;
+         border-radius:5px;padding:3px 8px;font-weight:600}
+  .delta.up{color:var(--teal-l);background:rgba(19,78,74,.4)}
+  .delta.down{color:var(--red-l);background:rgba(127,29,29,.32)}
+  .delta.flat{color:var(--dimmer);background:var(--panel-alt)}
+  .delta .tag{opacity:.65;font-weight:400}
+  .metric-prev{font-size:.68rem;color:var(--dimmest);margin-top:9px;line-height:1.45}
+
+  .chart-card{background:var(--panel);border:1px solid var(--border);border-radius:11px;padding:16px 14px;margin-top:12px}
+  svg.chart{width:100%;height:auto;display:block}
+  .grid-line{stroke:var(--border);stroke-width:1}
+  .ax{font-family:var(--mono);font-size:9px;fill:var(--dimmer)}
+  .vl{font-family:var(--mono);font-size:9px;fill:var(--dim);font-weight:600}
+  .legend{display:flex;gap:15px;margin-top:11px;flex-wrap:wrap}
+  .leg{display:flex;align-items:center;gap:6px;font-size:.72rem;color:var(--dim)}
+  .sw{width:11px;height:11px;border-radius:3px;flex-shrink:0}
+
+  .hbar{display:grid;grid-template-columns:104px 1fr 62px;align-items:center;gap:9px;margin-bottom:11px}
+  .hbar-lab{font-size:.74rem;color:var(--dim)}
+  .hbar-track{background:var(--panel-alt);border-radius:4px;height:9px;overflow:hidden}
+  .hbar-fill{height:100%;border-radius:4px;background:var(--teal)}
+  .hbar-val{font-family:var(--mono);font-size:.7rem;text-align:right}
+
+  .src{font-family:var(--mono);font-size:9.5px;color:var(--dimmest);margin-top:12px;line-height:1.55}
+  .src a{color:var(--dimmer);text-decoration:none;border-bottom:1px dotted var(--dimmest)}
+  .src a:hover{color:var(--amber-l)}
+
+  .skeleton{background:linear-gradient(90deg,var(--panel) 25%,var(--panel-alt) 50%,var(--panel) 75%);
+            background-size:200% 100%;animation:shim 1.4s infinite;border-radius:11px;height:118px}
+  @keyframes shim{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+  footer{margin-top:3rem;padding-top:1.5rem;border-top:1px solid var(--border);
+         font-size:.72rem;color:var(--dimmest);line-height:1.65}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">MSME Compliance &amp; Impact Platform</p>
+    <h1>The Ledger</h1>
+    <p class="sub">India's MSME registrations, merchandise trade, and industrial production — with year-on-year and month-on-month change computed from official releases.</p>
+    <div class="status-bar">
+      <span class="chip" id="statusChip"><span class="dot live"></span> <span id="statusText">Loading…</span></span>
+      <button class="refresh-btn" id="refreshBtn">↻ Refresh</button>
+    </div>
+  </header>
+
+  <div class="banner warn" id="warnBanner"></div>
+  <div class="banner err" id="errBanner"></div>
+
+  <main id="content">
+    <section><div class="metric-grid"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div></section>
+  </main>
+
+  <footer>
+    Data is fetched from official Government of India sources by a scheduled job and committed to this repository — the page reads that snapshot, so it loads instantly and works even when source portals are down. Trade figures refresh after the Commerce Ministry's monthly release (~15th); IIP after NSO Quick Estimates (~28th). All figures are provisional and subject to official revision. Percentages are computed from stored prior observations, never estimated.
+  </footer>
+
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var DATA_URL = "../data/latest.json";
+  var els = {
+    content: document.getElementById("content"),
+    statusChip: document.getElementById("statusChip"),
+    statusText: document.getElementById("statusText"),
+    warn: document.getElementById("warnBanner"),
+    err: document.getElementById("errBanner"),
+    refresh: document.getElementById("refreshBtn")
+  };
+
+  var MONTHS = ["January","February","March","April","May","June",
+                "July","August","September","October","November","December"];
+
+  function fmtPeriod(key) {
+    if (!key || key.length < 7) return "—";
+    var y = key.slice(0, 4), m = parseInt(key.slice(5, 7), 10);
+    return (MONTHS[m - 1] || "?") + " " + y;
+  }
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  // A rising trade deficit is bad; rising exports are good. Direction of
+  // "good" differs per metric, so callers pass invert=true where needed.
+  //
+  // kind === "points" means the underlying metric is ITSELF a rate (IIP growth),
+  // so we show percentage-point movement — "+4.2 pp" — rather than a
+  // percent-change-of-a-percent, which would read as a meaningless "+116%".
+  function deltaChip(val, label, invert, kind) {
+    if (val === null || val === undefined) {
+      return '<span class="delta flat"><span class="tag">' + label + '</span> n/a</span>';
+    }
+    var good = invert ? val < 0 : val > 0;
+    var cls = Math.abs(val) < 0.05 ? "flat" : (good ? "up" : "down");
+    var arrow = val > 0 ? "▲" : (val < 0 ? "▼" : "—");
+    var unit = kind === "points" ? " pp" : "%";
+    return '<span class="delta ' + cls + '"><span class="tag">' + label + '</span> ' +
+           arrow + " " + Math.abs(val).toFixed(1) + unit + "</span>";
+  }
+
+  function metricCard(label, value, metric, opts) {
+    opts = opts || {};
+    var m = metric || {};
+    var kind = m.delta_kind || "percent";
+    var prevBits = [];
+    if (m.prev_month !== null && m.prev_month !== undefined) {
+      prevBits.push("prev month " + (opts.prefix || "") + m.prev_month + (opts.suffix || ""));
+    }
+    if (m.prev_year !== null && m.prev_year !== undefined) {
+      prevBits.push("year ago " + (opts.prefix || "") + m.prev_year + (opts.suffix || ""));
+    }
+    return '<div class="metric">' +
+      '<div class="metric-label">' + esc(label) + "</div>" +
+      '<div class="metric-value">' + esc(value) + "</div>" +
+      '<div class="deltas">' +
+        deltaChip(m.mom, "MoM", opts.invert, kind) +
+        deltaChip(m.yoy, "YoY", opts.invert, kind) +
+      "</div>" +
+      (prevBits.length ? '<div class="metric-prev">' + esc(prevBits.join(" · ")) + "</div>" : "") +
+      "</div>";
+  }
+
+  function lineChart(series, opts) {
+    opts = opts || {};
+    var W = 640, H = 210, padL = 22, padR = 22, padT = 24, padB = 30;
+    var iW = W - padL - padR, iH = H - padT - padB;
+
+    var labels = [], all = [];
+    series.forEach(function (s) {
+      s.points.forEach(function (p) {
+        if (labels.indexOf(p.period) === -1) labels.push(p.period);
+        if (p.value !== null) all.push(p.value);
+      });
+    });
+    labels.sort();
+    if (!all.length) return '<p class="src">No data points available yet.</p>';
+
+    var min = Math.min.apply(null, all), max = Math.max.apply(null, all);
+    var range = (max - min) || 1;
+    min -= range * 0.22; max += range * 0.22;
+
+    function X(i) { return padL + (labels.length > 1 ? (iW * i) / (labels.length - 1) : iW / 2); }
+    function Y(v) { return padT + iH - ((v - min) / (max - min)) * iH; }
+
+    var svg = '<svg viewBox="0 0 ' + W + " " + H + '" class="chart" preserveAspectRatio="xMidYMid meet">';
+    for (var g = 0; g <= 2; g++) {
+      var gy = padT + (iH * g) / 2;
+      svg += '<line x1="' + padL + '" y1="' + gy.toFixed(1) + '" x2="' + (W - padR) + '" y2="' + gy.toFixed(1) + '" class="grid-line"/>';
+    }
+    labels.forEach(function (lab, i) {
+      var m = parseInt(lab.slice(5, 7), 10);
+      var short = (MONTHS[m - 1] || "?").slice(0, 3);
+      var showYear = i === 0 || lab.slice(0, 4) !== labels[i - 1].slice(0, 4);
+      svg += '<text x="' + X(i).toFixed(1) + '" y="' + (H - 14) + '" class="ax" text-anchor="middle">' + short + "</text>";
+      if (showYear) {
+        svg += '<text x="' + X(i).toFixed(1) + '" y="' + (H - 3) + '" class="ax" text-anchor="middle" opacity="0.6">' + lab.slice(0, 4) + "</text>";
+      }
+    });
+    series.forEach(function (s) {
+      var pts = [];
+      s.points.forEach(function (p) {
+        var i = labels.indexOf(p.period);
+        if (i !== -1 && p.value !== null) pts.push({ x: X(i), y: Y(p.value), v: p.value });
+      });
+      if (!pts.length) return;
+      svg += '<polyline points="' + pts.map(function (p) { return p.x.toFixed(1) + "," + p.y.toFixed(1); }).join(" ") +
+             '" fill="none" stroke="' + s.color + '" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>';
+      pts.forEach(function (p, i) {
+        svg += '<circle cx="' + p.x.toFixed(1) + '" cy="' + p.y.toFixed(1) + '" r="3.2" fill="' + s.color + '"/>';
+        if (i === pts.length - 1 || pts.length <= 8) {
+          svg += '<text x="' + p.x.toFixed(1) + '" y="' + (p.y - 9).toFixed(1) + '" class="vl" text-anchor="middle">' +
+                 (opts.prefix || "") + p.v + (opts.suffix || "") + "</text>";
+        }
+      });
+    });
+    svg += "</svg>";
+
+    var legend = '<div class="legend">' + series.map(function (s) {
+      return '<div class="leg"><span class="sw" style="background:' + s.color + '"></span>' + esc(s.name) + "</div>";
+    }).join("") + "</div>";
+
+    return svg + legend;
+  }
+
+  function render(d) {
+    var html = "";
+
+    // ---- Trade ----
+    if (d.trade && d.trade.metrics) {
+      var t = d.trade.metrics;
+      html += "<section>" +
+        '<div class="sec-head"><h2>Merchandise Trade</h2>' +
+        '<span class="sec-meta">' + fmtPeriod(d.trade.period) + (d.trade.stale ? " · STALE" : "") + "</span></div>" +
+        '<p class="sec-desc">Monthly goods trade, US$ billion. Change is computed against the prior month and the same month last year.</p>' +
+        '<div class="metric-grid">' +
+          metricCard("Exports", "$" + (t.exports_usd_bn.value ?? "—") + "B", t.exports_usd_bn, { prefix: "$", suffix: "B" }) +
+          metricCard("Imports", "$" + (t.imports_usd_bn.value ?? "—") + "B", t.imports_usd_bn, { prefix: "$", suffix: "B" }) +
+          metricCard("Trade Deficit", "$" + (t.deficit_usd_bn.value ?? "—") + "B", t.deficit_usd_bn, { prefix: "$", suffix: "B", invert: true }) +
+        "</div>";
+
+      if (d.trade.timeline) {
+        html += '<div class="chart-card">' + lineChart([
+          { name: "Exports", color: "#2dd4bf", points: d.trade.timeline.exports || [] },
+          { name: "Imports", color: "#f87171", points: d.trade.timeline.imports || [] }
+        ], { prefix: "$" }) +
+        '<p class="src">Source: <a href="' + esc(d.trade.source_url) + '" target="_blank" rel="noopener">' + esc(d.trade.source) + "</a></p></div>";
+      }
+      html += "</section>";
+    }
+
+    // ---- IIP ----
+    if (d.iip && d.iip.metrics) {
+      var p = d.iip.metrics;
+      html += "<section>" +
+        '<div class="sec-head"><h2>Industrial Production</h2>' +
+        '<span class="sec-meta">' + fmtPeriod(d.iip.period) + (d.iip.stale ? " · STALE" : "") + "</span></div>" +
+        '<p class="sec-desc">IIP year-on-year growth rate. Manufacturing carries roughly 76% weight in the index.</p>' +
+        '<div class="metric-grid two">' +
+          metricCard("Overall IIP growth", (p.overall_growth_pct.value ?? "—") + "%", p.overall_growth_pct, { suffix: "%" }) +
+          metricCard("Manufacturing growth", (p.manufacturing_growth_pct.value ?? "—") + "%", p.manufacturing_growth_pct, { suffix: "%" }) +
+        "</div>";
+
+      if (d.iip.timeline) {
+        html += '<div class="chart-card">' + lineChart([
+          { name: "Overall IIP", color: "#f59e0b", points: d.iip.timeline.overall || [] },
+          { name: "Manufacturing", color: "#2dd4bf", points: d.iip.timeline.manufacturing || [] }
+        ], { suffix: "%" }) +
+        '<p class="src">Source: <a href="' + esc(d.iip.source_url) + '" target="_blank" rel="noopener">' + esc(d.iip.source) + "</a></p></div>";
+      }
+      html += "</section>";
+    }
+
+    // ---- MSME ----
+    if (d.msme) {
+      var m = d.msme;
+      html += "<section>" +
+        '<div class="sec-head"><h2>MSME Registrations</h2>' +
+        '<span class="sec-meta">' + fmtPeriod(m.period) + (m.stale ? " · STALE" : "") + "</span></div>" +
+        '<p class="sec-desc">Cumulative enterprises on the Udyam Registration Portal and Udyam Assist Platform.</p>' +
+        '<div class="metric-grid two">' +
+          metricCard("Total registered", (m.total_crore ?? "—") + " Cr",
+                     (m.metrics && m.metrics.total_registered) || {}, {}) +
+          '<div class="metric"><div class="metric-label">Share that are micro enterprises</div>' +
+          '<div class="metric-value">98.9%</div>' +
+          '<div class="metric-prev">Of ~4.72 Cr on URP: ~4.9 lakh small, 37,042 medium</div></div>' +
+        "</div>";
+
+      if (m.top_states && m.top_states.length) {
+        var max = Math.max.apply(null, m.top_states.map(function (s) { return s.count; }));
+        html += '<div class="chart-card">';
+        m.top_states.forEach(function (s) {
+          var pct = max ? (s.count / max) * 100 : 0;
+          html += '<div class="hbar"><div class="hbar-lab">' + esc(s.state) + "</div>" +
+                  '<div class="hbar-track"><div class="hbar-fill" style="width:' + pct.toFixed(1) + '%"></div></div>' +
+                  '<div class="hbar-val">' + (s.count / 100000).toFixed(1) + "L</div></div>";
+        });
+        html += '<p class="src">Source: <a href="' + esc(m.source_url) + '" target="_blank" rel="noopener">' + esc(m.source) + "</a></p></div>";
+      }
+      html += "</section>";
+    }
+
+    els.content.innerHTML = html || '<p class="sec-desc">No data available.</p>';
+  }
+
+  function setStatus(state, text) {
+    els.statusChip.querySelector(".dot").className = "dot " + state;
+    els.statusText.textContent = text;
+  }
+
+  function load() {
+    els.refresh.disabled = true;
+    els.warn.style.display = "none";
+    els.err.style.display = "none";
+    setStatus("live", "Loading…");
+
+    fetch(DATA_URL + "?t=" + Date.now(), { cache: "no-store" })
+      .then(function (r) {
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.json();
+      })
+      .then(function (d) {
+        render(d);
+        var stale = (d.sources_failed || []).length;
+        if (stale) {
+          setStatus("stale", "Partial · updated " + (d.generated_at_display || "—"));
+          els.warn.textContent = "Some sources could not be reached on the last run (" +
+            d.sources_failed.join(", ") + "). Those sections show the last known good figures, marked STALE.";
+          els.warn.style.display = "block";
+        } else {
+          setStatus("live", "Updated " + (d.generated_at_display || "—"));
+        }
+      })
+      .catch(function (e) {
+        setStatus("err", "Unavailable");
+        els.err.textContent = "Could not load data/latest.json (" + e.message +
+          "). If you're opening this file directly from disk, browsers block local fetch — " +
+          "run a local server instead: python3 -m http.server, then open http://localhost:8000/site/";
+        els.err.style.display = "block";
+        els.content.innerHTML = "";
+      })
+      .finally(function () { els.refresh.disabled = false; });
+  }
+
+  els.refresh.addEventListener("click", load);
+  load();
+})();
+</script>
+</body>
+</html>
