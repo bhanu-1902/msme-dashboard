@@ -1,13 +1,12 @@
 {
-  "generated_at": "2026-08-20T03:31:30.312480+00:00",
-  "generated_at_display": "20 August 2026, 03:31 UTC",
-  "seeded": true,
-  "sources_ok": [
+  "generated_at": "2026-08-29T12:25:38.798754+00:00",
+  "generated_at_display": "29 August 2026, 12:25 UTC",
+  "sources_ok": [],
+  "sources_failed": [
     "trade",
     "iip",
     "msme"
   ],
-  "sources_failed": [],
   "trade": {
     "period": "2026-07",
     "metrics": {
@@ -142,7 +141,7 @@
     },
     "source": "Ministry of Commerce & Industry — monthly trade release",
     "source_url": "https://www.commerce.gov.in/trade-statistics/latest-trade-figures/",
-    "stale": false
+    "stale": true
   },
   "iip": {
     "period": "2026-06",
@@ -212,7 +211,7 @@
     },
     "source": "MOSPI / NSO — Index of Industrial Production, base 2022-23",
     "source_url": "https://www.mospi.gov.in/iip",
-    "stale": false
+    "stale": true
   },
   "msme": {
     "period": "2026-02",
@@ -262,6 +261,6 @@
     ],
     "source": "Ministry of MSME — Udyam Registration Portal + Udyam Assist",
     "source_url": "https://udyamregistration.gov.in",
-    "stale": false
+    "stale": true
   }
 }
